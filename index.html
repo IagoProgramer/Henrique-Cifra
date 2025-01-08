@@ -1,0 +1,1498 @@
+<html>
+<head>
+  <base href=".">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Criador Musical - Sistema Completo</title>
+  <meta name="description" content="Criador Musical - Crie e componha m&#xfa;sicas online">
+  <meta name="theme-color" content="#1a1a1a">
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #1DB954;  /* Spotify-like green */
+      --secondary: #1ed760;
+      --accent: #2ebd59;
+      --background: #121212;
+      --text: #FFFFFF;
+      --card-bg: #181818;
+      --border: #282828;
+      --success: #1DB954;
+      --warning: #FFAE00;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', 'Segoe UI', sans-serif;
+    }
+
+    body {
+      background: var(--background);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    .app-container {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      min-height: 100vh;
+    }
+
+    /* Improved Sidebar Styles */
+    .sidebar {
+      background: linear-gradient(145deg, #2d2d2d, #404040);
+      color: white;
+      padding: 2rem;
+      position: fixed;
+      height: 100vh;
+      width: 280px;
+      overflow-y: auto;
+      box-shadow: 4px 0 15px rgba(0,0,0,0.1);
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      z-index: 999;
+    }
+
+    .sidebar h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .sidebar-menu {
+      list-style: none;
+      margin-top: 2rem;
+    }
+
+    .sidebar-menu li {
+      margin: 0.5rem 0;
+    }
+
+    .sidebar-menu a {
+      color: white;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      padding: 1rem;
+      border-radius: 12px;
+      transition: all 0.3s ease;
+      font-weight: 500;
+    }
+
+    .sidebar-menu a:hover {
+      background: linear-gradient(90deg, rgba(255,255,255,0.15), transparent);
+      transform: translateX(5px);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .sidebar-menu a.active {
+      background: linear-gradient(90deg, var(--primary), transparent);
+      color: white;
+      transform: translateX(5px);
+    }
+
+    .sidebar-menu i {
+      margin-right: 12px;
+      width: 24px;
+      text-align: center;
+      font-size: 1.1rem;
+      transition: transform 0.3s ease;
+    }
+
+    .sidebar-menu a:hover i {
+      transform: scale(1.2);
+    }
+
+    /* Enhanced Main Content Area */
+    .main-content {
+      margin-left: 280px;
+      padding: 2.5rem;
+      background: var(--background);
+    }
+
+    .page {
+      display: none;
+      animation: fadeIn 0.4s ease;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    /* Improved Components */
+    .card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 1.75rem;
+      margin-bottom: 1.75rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+      border: 1px solid var(--border);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.75rem;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.75rem;
+    }
+
+    /* Enhanced Quick Tools Panel */
+    .quick-tools {
+      display: flex;
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .tool-button {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      padding: 1.25rem;
+      border-radius: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .tool-button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+      background: linear-gradient(45deg, var(--card-bg), #333);
+    }
+
+    /* Improved Button Styles */
+    .button {
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: white;
+      border: none;
+      padding: 1rem 1.75rem;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(99,102,241,0.3);
+    }
+
+    /* Enhanced Chord Library */
+    .chord-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 1.25rem;
+      padding: 1rem;
+    }
+
+    .chord-item {
+      background: var(--card-bg);
+      padding: 1.25rem;
+      border-radius: 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .chord-item:hover {
+      transform: scale(1.05);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      background: linear-gradient(45deg, var(--card-bg), #333);
+      border-color: var(--primary);
+    }
+
+    .chord-marker {
+      display: inline-block;
+      color: var(--primary) !important;
+      font-weight: bold;
+      font-size: 0.9em;
+      padding: 0 4px;
+      margin: 0 2px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .chord-marker:hover {
+      background: var(--card-bg);
+      transform: translateY(-2px);
+    }
+
+    .chord-selector {
+      margin-bottom: 1rem;
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .chord-select {
+      padding: 0.5rem;
+      border-radius: 8px;
+      background: var(--card-bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .add-chord-btn {
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .add-chord-btn:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.1);
+    }
+
+    /* Refined Animations */
+    @keyframes fadeIn {
+      from { 
+        opacity: 0; 
+        transform: translateY(20px); 
+        filter: blur(5px);
+      }
+      to { 
+        opacity: 1; 
+        transform: translateY(0);
+        filter: blur(0);
+      }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1024px) {
+      .app-container {
+        grid-template-columns: 1fr;
+      }
+      
+      .sidebar {
+        display: block;
+      }
+      
+      .main-content {
+        margin-left: 0;
+        padding: 1.5rem;
+      }
+      
+      .grid-2, .grid-3 {
+        grid-template-columns: 1fr;
+      }
+      
+      .quick-tools {
+        flex-direction: column;
+      }
+      
+      .tool-button {
+        width: 100%;
+      }
+      
+      .mobile-menu-btn {
+        display: block;
+      }
+      
+      .sidebar.active {
+        transform: translateX(0);
+        display: block;
+      }
+      
+    }
+
+    .song-title {
+      font-size: 1.5rem;
+      padding: 0.75rem;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      width: 100%;
+      margin-bottom: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    .song-key {
+      padding: 0.75rem;
+      border: 2px solid var(--border); 
+      border-radius: 12px;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .editor-toolbar {
+      display: flex;
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+
+    .editor-toolbar button {
+      padding: 0.75rem 1.25rem;
+      border-radius: 8px;
+      border: none;
+      background: var(--primary);
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .song-section {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 1rem 0;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+      border: 1px solid var(--border);
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-content {
+      min-height: 100px;
+      padding: 1rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      line-height: 1.8;
+    }
+
+    /* Remove unused styles */
+    .staff-editor,
+    .staff-controls,
+    .staff-canvas, 
+    .note-options,
+    .pitch-controls,
+    .piano-keys,
+    .piano-key,
+    .piano-key.white,
+    .piano-key.black,
+    .piano-key:hover,
+    .piano-key.active,
+    .chord-grid,
+    .chord-library,
+    .chord-item {
+      display: none;
+    }
+
+    /* Add welcome screen styles */
+    .welcome-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, #1a1a1a, #2d2d2d);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      animation: welcomeFade 1s ease-out;
+    }
+
+    .welcome-logo {
+      font-size: 3rem;
+      margin-bottom: 2rem;
+      color: var(--primary);
+    }
+
+    .welcome-title {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      color: var(--text);
+    }
+
+    .welcome-subtitle {
+      font-size: 1.2rem;
+      margin-bottom: 2rem;
+      color: var(--text);
+      opacity: 0.8;
+    }
+
+    .start-button {
+      padding: 1rem 2rem;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    @keyframes welcomeFade {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    /* Add page transition styles */
+    .page {
+      display: none;
+      animation: fadeIn 0.4s ease;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    /* Add mobile menu styles */
+    .mobile-menu-btn {
+      display: none;
+      position: fixed;
+      top: 1rem;
+      left: 1rem;
+      z-index: 1001;
+      background: var(--primary);
+      border: none;
+      padding: 0.75rem;
+      border-radius: 8px;
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .notification {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 15px 25px;
+      border-radius: 8px;
+      color: white;
+      animation: slideIn 0.3s ease, slideOut 0.3s ease 2.7s;
+      z-index: 1000;
+    }
+
+    .notification.success {
+      background: var(--success);
+    }
+
+    .share-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .share-modal-content {
+      background: var(--card-bg);
+      padding: 2rem;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 500px;
+      text-align: center;
+    }
+
+    .share-buttons {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+
+    .share-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem;
+      border-radius: 8px;
+      color: white;
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+
+    .share-button.whatsapp { background: #25D366; }
+    .share-button.telegram { background: #0088cc; }
+    .share-button.email { background: #EA4335; }
+
+    .share-button:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.1);
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); }
+      to { transform: translateX(0); }
+    }
+
+    @keyframes slideOut {
+      from { transform: translateX(0); }
+      to { transform: translateX(100%); }
+    }
+
+    /* Add new preview card styles */
+    .song-preview-card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 2rem;
+      margin: 1rem 0;
+      border: 1px solid var(--border);
+      white-space: pre-wrap;
+    }
+
+    .song-preview-card h2 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .song-preview-chord {
+      color: var(--primary);
+      font-weight: bold;
+      font-family: monospace;
+      background: rgba(99,102,241,0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+      display: inline-block;
+      margin: 0 2px;
+    }
+
+    .song-preview-section {
+      margin: 1rem 0;
+      padding: 1rem;
+      background: rgba(0,0,0,0.2);
+      border-radius: 8px;
+    }
+
+    .song-preview-section-title {
+      font-size: 1.1rem;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+      color: var(--accent);
+    }
+
+    /* Add styles for saved songs list */
+    .saved-songs {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 1rem 0;
+    }
+
+    .saved-song-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      border-bottom: 1px solid var(--border);
+      transition: all 0.3s ease;
+    }
+
+    .saved-song-item:hover {
+      background: rgba(255,255,255,0.05);
+    }
+
+    .saved-song-title {
+      font-size: 1.1rem;
+      font-weight: 500;
+    }
+
+    .saved-song-actions {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .saved-song-btn {
+      background: none;
+      border: none;
+      color: var(--text);
+      cursor: pointer;
+      padding: 0.5rem;
+      border-radius: 4px;
+      transition: all 0.3s ease;
+    }
+
+    .saved-song-btn:hover {
+      background: var(--primary);
+      color: white;
+    }
+
+    /* Add button styles */
+    .back-button {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      padding: 0.75rem 1.25rem;
+      border-radius: 8px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      gap: 0.5rem;
+      z-index: 1001;
+      transition: all 0.3s ease;
+    }
+
+    .back-button:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.1);
+    }
+
+    /* Add new loading indicator */
+    .loading-spinner {
+      border: 4px solid var(--border);
+      border-top: 4px solid var(--primary);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+    }
+
+    .preview-container {
+      padding: 2rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .preview-section {
+      margin: 2rem 0;
+      padding: 2rem;
+      background: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .preview-chord {
+      color: var(--primary);
+      font-weight: bold;
+      font-family: monospace;
+      padding: 0.25rem 0.5rem;
+      margin: 0 0.25rem;
+      background: rgba(29,185,84,0.1);
+      border-radius: 4px;
+    }
+
+    @keyframes spin {
+      100% { transform: rotate(360deg); }
+    }
+    
+    @media (min-width: 1025px) {
+      .sidebar {
+        transform: translateX(0);
+      }
+    }
+
+    /* Add new home page styles */
+    .home-page {
+      padding: 3rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* Add new back to home button styles */
+    .home-button {
+      position: fixed; 
+      top: 20px;
+      right: 20px;
+      padding: 0.75rem 1.25rem;
+      border-radius: 8px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      z-index: 1001;
+      transition: all 0.3s ease;
+    }
+
+    .home-button:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.1);
+    }
+
+    /* Update home page hero styles */
+    .home-hero {
+      text-align: center;
+      padding: 6rem 0;
+      margin-bottom: 3rem;
+      background: linear-gradient(145deg, #2d2d2d, #404040);
+      border-radius: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .home-hero::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, rgba(29,185,84,0.1), transparent);
+      z-index: 0;
+    }
+
+    .home-hero * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .home-hero h1 {
+      font-size: 3.5rem;
+      margin-bottom: 1rem;
+      background: linear-gradient(45deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .home-hero p {
+      font-size: 1.2rem;
+      opacity: 0.8;
+      margin-bottom: 2rem;
+    }
+
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+      margin: 3rem 0;
+    }
+
+    .action-card {
+      background: var(--card-bg);
+      padding: 2rem;
+      border-radius: 16px;
+      text-align: center;
+      transition: all 0.3s ease;
+      border: 1px solid var(--border);
+    }
+
+    .action-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+
+    .action-card i {
+      font-size: 3rem;
+      color: var(--primary);
+      margin-bottom: 1rem;
+    }
+
+    .home-portfolio {
+      margin: 4rem 0;
+    }
+
+    .portfolio-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 2rem;
+    }
+
+    .portfolio-item {
+      background: var(--card-bg);
+      padding: 1.5rem;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      transition: all 0.3s ease;
+    }
+
+    .portfolio-item:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    }
+
+    /* Add basic page styles */
+    .page-content {
+      padding: 2rem;
+      background: var(--card-bg);
+      border-radius: 16px;
+      margin: 2rem;
+    }
+
+    .page-content h2 {
+      margin-bottom: 1rem;
+      color: var(--primary);
+    }
+
+    .page-content p {
+      line-height: 1.6;
+      opacity: 0.8;
+    }
+  </style>
+</head>
+<body>
+  <div class="welcome-screen" id="welcomeScreen">
+    <i class="fas fa-music welcome-logo"></i>
+    <h1 class="welcome-title">Bem-vindo ao Criador Musical</h1>
+    <p class="welcome-subtitle">Crie, componha e compartilhe suas m&#xfa;sicas</p>
+    <button class="start-button" onclick="startApp()">Come&#xe7;ar</button>
+  </div>
+
+  <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+    <i class="fas fa-bars"></i>
+  </button>
+  <button class="home-button" onclick="showPage(&apos;home&apos;)">
+    <i class="fas fa-home"></i>
+    Voltar para In&#xed;cio
+  </button>
+  <div class="app-container">
+    <nav class="sidebar">
+      <h2><i class="fas fa-music"></i> Criador Musical</h2>
+      <ul class="sidebar-menu">
+        <li><a href="#home" onclick="showPage(&apos;home&apos;)"><i class="fas fa-home"></i> In&#xed;cio</a></li>
+        <li><a href="#editor" onclick="showPage(&apos;editor&apos;)"><i class="fas fa-edit"></i> Editor Principal</a></li>
+        <li><a href="#saved" onclick="showPage(&apos;saved&apos;)"><i class="fas fa-save"></i> Minhas Cifras</a></li>
+      </ul>
+    </nav>
+
+    <main class="main-content">
+      <div id="home" class="page">
+        <div class="home-page">
+          <div class="home-hero">
+            <h1>Henrique Cifras</h1>
+            <p>Crie, componha e compartilhe suas m&#xfa;sicas</p>
+            <button class="button" onclick="showPage(&apos;editor&apos;)">
+              <i class="fas fa-plus"></i> Criar Nova M&#xfa;sica
+            </button>
+          </div>
+
+          <div class="quick-actions">
+            <div class="action-card" onclick="showPage(&apos;editor&apos;)">
+              <i class="fas fa-edit"></i>
+              <h3>Criar Cifra</h3>
+              <p>Monte sua pr&#xf3;pria cifra do zero</p>
+            </div>
+            <div class="action-card" onclick="showPage(&apos;saved&apos;)">
+              <i class="fas fa-folder"></i>
+              <h3>Minhas Cifras</h3>
+              <p>Acesse suas cifras salvas</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="editor" class="page active">
+        <div class="quick-tools">
+          <button class="tool-button" onclick="createNewSong()"><i class="fas fa-plus"></i> Nova M&#xfa;sica</button>
+          <button class="tool-button" onclick="exportSong()"><i class="fas fa-file-export"></i> Exportar</button>
+          <button class="tool-button" onclick="shareSong()"><i class="fas fa-share"></i> Compartilhar</button>
+        </div>
+        
+        <!-- Song Editor -->
+        <div class="card">
+          <div class="song-header">
+            <input type="text" id="songTitle" class="song-title" placeholder="T&#xed;tulo da M&#xfa;sica">
+            <select id="songKey" class="song-key">
+              <option value="C">Tom: C</option>
+              <option value="D">Tom: D</option>
+              <option value="E">Tom: E</option>
+              <option value="F">Tom: F</option>
+              <option value="G">Tom: G</option>
+              <option value="A">Tom: A</option>
+              <option value="B">Tom: B</option>
+            </select>
+          </div>
+          
+          <div class="editor-toolbar">
+            <button onclick="addVerse()"><i class="fas fa-plus"></i> Adicionar Verso</button>
+            <button onclick="addChorus()"><i class="fas fa-plus"></i> Adicionar Refr&#xe3;o</button>
+            <button onclick="addBridge()"><i class="fas fa-plus"></i> Adicionar Ponte</button>
+          </div>
+
+          <div id="songContent" class="song-content">
+            <!-- Song sections will be added here -->
+          </div>
+        </div>
+
+      </div>
+      
+      <div id="saved" class="page">
+        <h2>Minhas M&#xfa;sicas Salvas</h2>
+        <div class="saved-songs" id="savedSongsList">
+          <!-- Saved songs will be listed here -->
+        </div>
+      </div>
+    </main>
+  </div>
+  <script>function withErrorHandling(fn) {
+  return async (...args) => {
+    try {
+      await fn(...args);
+    } catch (err) {
+      console.error(err);
+      showNotification('Erro: ' + err.message, 'error');
+    }
+  };
+}
+function showNotification(message, type = 'info') {
+  const notification = document.createElement('div');
+  notification.className = `notification ${type}`;
+  notification.textContent = message;
+  document.body.appendChild(notification);
+  setTimeout(() => notification.remove(), 3000);
+}
+const AppState = {
+  currentPage: 'editor',
+  songHistory: [],
+  undoStack: [],
+  redoStack: [],
+  navigateTo(page) {
+    this.currentPage = page;
+    showPage(page);
+  },
+  pushHistory(action) {
+    this.songHistory.push({
+      action,
+      timestamp: Date.now()
+    });
+  }
+};
+async function exportSong() {
+  const {
+    jsPDF
+  } = window.jspdf;
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4'
+  });
+  doc.setFont("helvetica");
+  doc.setFillColor(40, 40, 40);
+  doc.rect(0, 0, 210, 30, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(24);
+  doc.setFont("helvetica", "bold");
+  doc.text(editor.currentSong.title || 'Untitled Song', 20, 20);
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "normal");
+  doc.text(`Tom: ${editor.currentSong.key}`, 20, 40);
+  doc.text(`Data: ${new Date().toLocaleDateString()}`, 150, 40);
+  doc.setDrawColor(100, 100, 100);
+  doc.setLineWidth(0.5);
+  doc.line(20, 45, 190, 45);
+  let yPos = 60;
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(14);
+  editor.currentSong.sections.forEach((section, index) => {
+    doc.setFillColor(230, 230, 230);
+    doc.rect(15, yPos - 5, 180, 8, 'F');
+    doc.setFont("helvetica", "bold");
+    doc.text(section.type.toUpperCase(), 20, yPos);
+    yPos += 10;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(12);
+    const content = section.content.replace(/<span class="chord-marker".*?>(.*?)<\/span>/g, (match, chord) => {
+      return `[${chord}]`;
+    }).replace(/<[^>]*>/g, '');
+    const lines = doc.splitTextToSize(content, 170);
+    lines.forEach(line => {
+      if (yPos > 270) {
+        doc.addPage();
+        yPos = 20;
+        doc.setFillColor(40, 40, 40);
+        doc.rect(0, 0, 210, 15, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(10);
+        doc.text(editor.currentSong.title || 'Untitled Song', 20, 10);
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(12);
+      }
+      const processLine = line => {
+        if (line.includes('[')) {
+          const parts = line.split(/(\[.*?\])/);
+          let xPos = 20;
+          parts.forEach(part => {
+            if (part.startsWith('[')) {
+              doc.setTextColor(29, 185, 84);
+              doc.setFont("helvetica", "bold");
+            } else {
+              doc.setTextColor(0, 0, 0);
+              doc.setFont("helvetica", "normal");
+            }
+            doc.text(part, xPos, yPos);
+            xPos += doc.getTextWidth(part);
+          });
+          return true;
+        }
+        return false;
+      };
+      if (!processLine(line)) {
+        doc.text(line, 20, yPos);
+      }
+      yPos += 7;
+    });
+    yPos += 10;
+    if (index < editor.currentSong.sections.length - 1) {
+      doc.setDrawColor(200, 200, 200);
+      doc.line(20, yPos - 5, 190, yPos - 5);
+    }
+  });
+  doc.setFontSize(8);
+  doc.setTextColor(150, 150, 150);
+  const pageCount = doc.internal.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.text(`Página ${i} de ${pageCount}`, 95, 290);
+    doc.text('Gerado pelo Criador Musical', 85, 285);
+  }
+  try {
+    doc.save(`${editor.currentSong.title || 'musica'}.pdf`);
+    const notification = document.createElement('div');
+    notification.className = 'notification success';
+    notification.textContent = 'Música exportada com sucesso!';
+    document.body.appendChild(notification);
+    setTimeout(() => notification.remove(), 3000);
+  } catch (err) {
+    console.error('Error exporting song:', err);
+    alert('Erro ao exportar música. Por favor, tente novamente.');
+  }
+}
+async function shareSong() {
+  try {
+    const songData = JSON.stringify(editor.currentSong);
+    const shareableData = encodeURIComponent(songData);
+    const url = `${window.location.origin}${window.location.pathname}?song=${shareableData}`;
+    if (navigator.share) {
+      await navigator.share({
+        title: editor.currentSong.title || 'Música Compartilhada',
+        text: 'Confira essa música que criei!',
+        url: url
+      });
+    } else {
+      await navigator.clipboard.writeText(url);
+      const modal = document.createElement('div');
+      modal.className = 'share-modal';
+      modal.innerHTML = `
+                <div class="share-modal-content">
+                    <h3>Compartilhar Música</h3>
+                    <p>Link copiado para a área de transferência!</p>
+                    <div class="share-buttons">
+                        <a href="https://wa.me/?text=${encodeURIComponent('Confira essa música: ' + url)}" target="_blank" class="share-button whatsapp">
+                            <i class="fab fa-whatsapp"></i> WhatsApp
+                        </a>
+                        <a href="https://t.me/share/url?url=${encodeURIComponent(url)}" target="_blank" class="share-button telegram">
+                            <i class="fab fa-telegram"></i> Telegram
+                        </a>
+                        <a href="mailto:?subject=Compartilhando uma música&body=${encodeURIComponent('Confira essa música: ' + url)}" class="share-button email">
+                            <i class="fas fa-envelope"></i> Email
+                        </a>
+                    </div>
+                    <button onclick="this.parentElement.parentElement.remove()">Fechar</button>
+                </div>
+            `;
+      document.body.appendChild(modal);
+    }
+  } catch (err) {
+    console.error('Error sharing song:', err);
+    alert('Erro ao compartilhar música. Por favor, tente novamente.');
+  }
+}
+async function playChordPreview(chord) {
+  if (!window.guitarSynth) {
+    window.guitarSynth = new GuitarSynth();
+    await Tone.start();
+  }
+  const chordNotes = getChordNotes(chord);
+  window.guitarSynth.strum(chordNotes, "2n", "down");
+}
+function showPage(pageId) {
+  if (!['home', 'editor', 'saved'].includes(pageId)) {
+    pageId = 'home';
+  }
+  document.querySelectorAll('.page').forEach(page => {
+    page.classList.remove('active');
+  });
+  const page = document.getElementById(pageId);
+  if (page) {
+    page.classList.add('active');
+    if (pageId !== 'home') {
+      const homeBtn = document.createElement('button');
+      homeBtn.className = 'home-button';
+      homeBtn.innerHTML = '<i class="fas fa-home"></i> Página Inicial';
+      homeBtn.onclick = () => showPage('home');
+      document.body.appendChild(homeBtn);
+    } else {
+      document.querySelectorAll('.home-button').forEach(btn => btn.remove());
+    }
+  }
+  setActiveMenuItem(pageId);
+  window.scrollTo(0, 0);
+}
+class SongEditor {
+  constructor() {
+    this.currentSong = {
+      title: '',
+      key: 'C',
+      sections: []
+    };
+    this.initialized = false;
+    this.setupEventListeners();
+  }
+  setupEventListeners() {
+    document.getElementById('songTitle').addEventListener('input', e => {
+      this.currentSong.title = e.target.value;
+    });
+    document.getElementById('songKey').addEventListener('change', e => {
+      this.currentSong.key = e.target.value;
+      this.updateDisplay();
+    });
+  }
+  addSection(type) {
+    this.currentSong.sections.push({
+      type,
+      content: '',
+      chords: {}
+    });
+    this.updateDisplay();
+  }
+  updateDisplay() {
+    const container = document.getElementById('songContent');
+    container.innerHTML = '';
+    this.currentSong.sections.forEach((section, index) => {
+      container.appendChild(this.createSectionElement(section, index));
+    });
+  }
+  createSectionElement(section, index) {
+    const div = document.createElement('div');
+    div.className = `song-section ${section.type}`;
+    const header = document.createElement('div');
+    header.className = 'section-header';
+    header.innerHTML = `
+            <span>${section.type.charAt(0).toUpperCase() + section.type.slice(1)}</span>
+            <div class="section-controls">
+                <button onclick="editor.moveSection(${index}, -1)">
+                    <i class="fas fa-arrow-up"></i>
+                </button>
+                <button onclick="editor.moveSection(${index}, 1)">
+                    <i class="fas fa-arrow-down"></i>
+                </button>
+                <button onclick="editor.removeSection(${index})">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `;
+    const content = document.createElement('div');
+    content.className = 'section-content';
+    content.contentEditable = true;
+    content.innerHTML = section.content;
+    content.addEventListener('input', () => {
+      section.content = content.innerHTML;
+    });
+    const chordSelector = document.createElement('div');
+    chordSelector.className = 'chord-selector';
+    chordSelector.innerHTML = `
+        <select class="chord-select">
+            <option value="">Selecionar Acorde</option>
+            <optgroup label="Acordes Maiores">
+                <option value="C">C</option>
+                <option value="D">D</option>
+                <option value="E">E</option>
+                <option value="F">F</option>
+                <option value="G">G</option>
+                <option value="A">A</option>
+                <option value="B">B</option>
+            </optgroup>
+            <optgroup label="Acordes Menores">
+                <option value="Cm">Cm</option>
+                <option value="Dm">Dm</option>
+                <option value="Em">Em</option>
+                <option value="Fm">Fm</option>
+                <option value="Gm">Gm</option>
+                <option value="Am">Am</option>
+                <option value="Bm">Bm</option>
+            </optgroup>
+            <optgroup label="Acordes com Sétima">
+                <option value="C7">C7</option>
+                <option value="D7">D7</option>
+                <option value="E7">E7</option>
+                <option value="F7">F7</option>
+                <option value="G7">G7</option>
+                <option value="A7">A7</option>
+                <option value="B7">B7</option>
+            </optgroup>
+            <optgroup label="Acordes Diminutos">
+                <option value="Cdim">Cdim</option>
+                <option value="Ddim">Ddim</option>
+                <option value="Edim">Edim</option>
+                <option value="Fdim">Fdim</option>
+                <option value="Gdim">Gdim</option>
+                <option value="Adim">Adim</option>
+                <option value="Bdim">Bdim</option>
+            </optgroup>
+            <optgroup label="Acordes Aumentados">
+                <option value="Caug">Caug</option>
+                <option value="Daug">Daug</option>
+                <option value="Eaug">Eaug</option>
+                <option value="Faug">Faug</option>
+                <option value="Gaug">Gaug</option>
+                <option value="Aaug">Aaug</option>
+                <option value="Baug">Baug</option>
+            </optgroup>
+        </select>
+        <button class="add-chord-btn" onclick="addChordToSection(${index})">
+            <i class="fas fa-plus"></i> Adicionar Acorde
+        </button>
+        <button class="add-chord-btn" onclick="playChordPreview(this.previousElementSibling.previousElementSibling.value)">
+            <i class="fas fa-play"></i> Tocar Acorde
+        </button>
+    `;
+    div.appendChild(header);
+    div.appendChild(chordSelector);
+    div.appendChild(content);
+    return div;
+  }
+  removeSection(index) {
+    this.currentSong.sections.splice(index, 1);
+    this.updateDisplay();
+  }
+  moveSection(index, direction) {
+    const sections = this.currentSong.sections;
+    const newIndex = index + direction;
+    if (newIndex >= 0 && newIndex < sections.length) {
+      [sections[index], sections[newIndex]] = [sections[newIndex], sections[index]];
+      this.updateDisplay();
+    }
+  }
+  saveSong() {
+    return savedSongsManager.saveSong({
+      ...this.currentSong
+    });
+  }
+  loadSong(song) {
+    this.currentSong = song;
+    this.updateDisplay();
+  }
+}
+let editor;
+function getChordNotes(chord) {
+  const baseNotes = {
+    'C': ['C4', 'E4', 'G4'],
+    'D': ['D4', 'F#4', 'A4'],
+    'E': ['E4', 'G#4', 'B4'],
+    'F': ['F4', 'A4', 'C5'],
+    'G': ['G4', 'B4', 'D5'],
+    'A': ['A4', 'C#5', 'E5'],
+    'B': ['B4', 'D#5', 'F#5']
+  };
+  const baseChord = chord.charAt(0);
+  const modification = chord.slice(1);
+  let notes = [...baseNotes[baseChord]];
+  if (modification.includes('m')) {
+    notes[1] = Tone.Frequency(notes[1]).transpose(-1).toNote();
+  }
+  if (modification.includes('7')) {
+    notes.push(Tone.Frequency(notes[0]).transpose(10).toNote());
+  }
+  if (modification.includes('dim')) {
+    notes[1] = Tone.Frequency(notes[1]).transpose(-1).toNote();
+    notes[2] = Tone.Frequency(notes[2]).transpose(-1).toNote();
+  }
+  if (modification.includes('aug')) {
+    notes[2] = Tone.Frequency(notes[2]).transpose(1).toNote();
+  }
+  return notes;
+}
+function toggleMobileMenu() {
+  const sidebar = document.querySelector('.sidebar');
+  sidebar.classList.toggle('active');
+  const btn = document.querySelector('.mobile-menu-btn i');
+  btn.classList.toggle('fa-bars');
+  btn.classList.toggle('fa-times');
+}
+function setActiveMenuItem(pageId) {
+  document.querySelectorAll('.sidebar-menu a').forEach(link => {
+    link.classList.remove('active');
+    if (link.getAttribute('href') === '#' + pageId) {
+      link.classList.add('active');
+    }
+  });
+}
+class SavedSongsManager {
+  constructor() {
+    this.songs = this.loadSongs();
+  }
+  loadSongs() {
+    return JSON.parse(localStorage.getItem('savedSongs')) || [];
+  }
+  saveSong(song) {
+    song.id = Date.now();
+    song.dateCreated = new Date().toLocaleDateString();
+    this.songs.push(song);
+    localStorage.setItem('savedSongs', JSON.stringify(this.songs));
+    this.renderSongs();
+    return song.id;
+  }
+  deleteSong(id) {
+    this.songs = this.songs.filter(song => song.id !== id);
+    localStorage.setItem('savedSongs', JSON.stringify(this.songs));
+    this.renderSongs();
+  }
+  loadSong(id) {
+    return this.songs.find(song => song.id === id);
+  }
+  renderSongs() {
+    const container = document.getElementById('savedSongsList');
+    if (!container) return;
+    container.innerHTML = this.songs.length === 0 ? '<p>Nenhuma música salva ainda</p>' : this.songs.map(song => `
+      <div class="saved-song-item">
+        <div class="saved-song-title">${song.title || 'Sem título'}</div>
+        <div class="saved-song-actions">
+          <button onclick="loadSavedSong(${song.id})">
+            <i class="fas fa-edit"></i>
+          </button>
+          <button onclick="deleteSavedSong(${song.id})">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      </div>
+    `).join('');
+  }
+}
+let savedSongsManager;
+function loadSavedSong(id) {
+  const song = savedSongsManager.loadSong(id);
+  if (song) {
+    editor.currentSong = song;
+    editor.updateDisplay();
+    showPage('editor');
+  }
+}
+function deleteSavedSong(id) {
+  if (confirm('Tem certeza que deseja excluir esta música?')) {
+    savedSongsManager.deleteSong(id);
+  }
+}
+function createNewSong() {
+  editor.currentSong = {
+    title: '',
+    key: 'C',
+    sections: []
+  };
+  document.getElementById('songTitle').value = '';
+  editor.updateDisplay();
+  editor.initializePreviewButton();
+}
+function addVerse() {
+  editor.addSection('verse');
+}
+function addChorus() {
+  editor.addSection('chorus');
+}
+function addBridge() {
+  editor.addSection('bridge');
+}
+function startApp() {
+  const welcomeScreen = document.getElementById('welcomeScreen');
+  welcomeScreen.style.opacity = '0';
+  setTimeout(() => {
+    welcomeScreen.style.display = 'none';
+    showPage('home');
+  }, 1000);
+}
+function addChordToSection(sectionIndex) {
+  const section = editor.currentSong.sections[sectionIndex];
+  const chordSelect = document.querySelectorAll('.chord-select')[sectionIndex];
+  const selectedChord = chordSelect.value;
+  if (selectedChord) {
+    const chordSpan = document.createElement('span');
+    chordSpan.className = 'chord-marker';
+    chordSpan.textContent = selectedChord;
+    chordSpan.style.color = 'var(--primary)';
+    chordSpan.setAttribute('contenteditable', 'false');
+    chordSpan.dataset.chord = selectedChord;
+    chordSpan.addEventListener('dblclick', e => {
+      if (confirm('Remover este acorde?')) {
+        e.target.remove();
+        editor.autosave();
+      }
+    });
+    chordSpan.title = 'Clique duplo para remover';
+    const content = document.querySelectorAll('.section-content')[sectionIndex];
+    const selection = window.getSelection();
+    if (selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0);
+      if (range.intersectsNode(content)) {
+        range.insertNode(chordSpan);
+        const newRange = document.createRange();
+        newRange.setStartAfter(chordSpan);
+        newRange.collapse(true);
+        selection.removeAllRanges();
+        selection.addRange(newRange);
+        section.chords[Date.now()] = {
+          chord: selectedChord,
+          position: content.innerHTML.indexOf(chordSpan.outerHTML),
+          text: chordSpan.outerHTML
+        };
+        editor.autosave();
+        chordSpan.style.animation = 'pulseGlow 0.5s ease';
+      }
+    }
+  }
+}
+class GuitarSynth {
+  constructor() {
+    this.synth = new Tone.PolySynth().toDestination();
+  }
+  strum(notes, duration = "2n") {
+    const strumSpacing = 0.02;
+    notes.forEach((note, i) => {
+      this.synth.triggerAttackRelease(note, duration, Tone.now() + i * strumSpacing);
+    });
+  }
+}
+async function initAudioContext() {
+  if (Tone.context.state !== 'running') {
+    await Tone.context.resume();
+  }
+}
+document.addEventListener('DOMContentLoaded', () => {
+  editor = new SongEditor();
+  savedSongsManager = new SavedSongsManager();
+  showPage('home');
+});
+window.addEventListener('hashchange', () => {
+  const pageId = window.location.hash.slice(1) || 'editor';
+  showPage(pageId);
+});</script>
+</body>
+</html>
